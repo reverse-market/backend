@@ -1,0 +1,126 @@
+basePath: /
+consumes:
+- application/json
+host: localhost
+info:
+  contact:
+    email: sergeykozhin@gmail.com
+    name: Sergey Kozhin
+  description: Documentation for Reverse Market API.
+  title: Reverse Market API.
+  version: 1.0.0
+paths:
+  /auth/check:
+    get:
+      description: Check endpoint for JWT validation
+      operationId: check
+      responses:
+        "200":
+          $ref: '#/responses/OkResponse'
+        "400":
+          $ref: '#/responses/BadRequestError'
+        "401":
+          $ref: '#/responses/UnauthorizedError'
+      security:
+      - oauth2:
+        - read
+      tags:
+      - auth
+  /auth/sign_in:
+    post:
+      description: Consumes Google ID token and produces JWT token, if ID token is
+        valid
+      operationId: signIn
+      parameters:
+      - description: Google Id token
+        in: body
+        name: Body
+        schema:
+          properties:
+            id_token:
+              example: eyJhbGciOiJSUzI1NiIsImtpZCI6IjJlMzAyNWYyNmI1OTVmOTZlYWM5MDdjYzJiOTQ3MTQyMmJjYWViOTMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI0MDc0MDg3MTgxOTIuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI0MDc0MDg3MTgxOTIuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDIzNjk3NjA1MTAzMjYxNjkyNzEiLCJlbWFpbCI6Imt6aGludmxkbXJAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiI1alROei1NSzVmQUIzdmNpY3cwU1ZBIiwibmFtZSI6ItCh0LXRgNCz0LXQuSDQmtC-0LbQuNC9IiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hLS9BT2gxNEdqQi1sakU2QzVIYWIySW03YVB4bG1ROW9HUlpwSExaODdNd215eT1zOTYtYyIsImdpdmVuX25hbWUiOiLQodC10YDQs9C10LkiLCJmYW1pbHlfbmFtZSI6ItCa0L7QttC40L0iLCJsb2NhbGUiOiJydSIsImlhdCI6MTYwNjY1NTU2OSwiZXhwIjoxNjA2NjU5MTY5fQ.X_B9DZXuwKV4A5KMBVtuCPERKCZh6ugH0s4AYzwbLzzouMzoUZCDMz0EjVVikTBjiPG86uMYUojWimjxcwZJ0TJKnspJ3BnFBBncHT4uxZtXik3MZdlUA0q0jIusXaR-GEXZGlzUVXYlfs8ppWP964k2a2NYxczJWFfvXRNi7SC9CSmvLUc4km6GG7abbqRtI-EJR61cWXjxNJwA9EeJz7n-rynKSEekTCa0ZJCYUtZ5aMJ7TKGM2tYlwy3s04-MMGuhodgk62Jfa0FoKAimnPDDljF5Q2A-t-pJRqO3x9IXOICf52aZQbFjzmFu8c7XgfPLiyiC4tO4RVa9R1dCYQ
+              type: string
+              x-go-name: IDToken
+          required:
+          - id_token
+          type: object
+      responses:
+        "200":
+          $ref: '#/responses/SignInResponse'
+        "400":
+          $ref: '#/responses/BadRequestError'
+      tags:
+      - auth
+  /user:
+    get:
+      description: Provides information about current user
+      operationId: getUser
+      responses:
+        "200":
+          $ref: '#/responses/UserResponse'
+        "400":
+          $ref: '#/responses/BadRequestError'
+        "401":
+          $ref: '#/responses/UnauthorizedError'
+      security:
+      - oauth2:
+        - read
+      tags:
+      - user
+produces:
+- application/json
+- application/txt
+responses:
+  BadRequestError:
+    description: Error message
+  OkResponse:
+    description: OK Response
+  SignInResponse:
+    description: JSON containing JWT token.
+    schema:
+      properties:
+        jwt_token:
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+          type: string
+          x-go-name: JwtToken
+      type: object
+  UnauthorizedError:
+    description: Unauthorized error message
+  UserResponse:
+    description: JSON containing user info.
+    schema:
+      properties:
+        avatar:
+          example: /avatars/1.png
+          type: string
+          x-go-name: Avatar
+        default_address_id:
+          example: 1
+          format: int64
+          type: integer
+          x-go-name: DefaultAddressID
+        email:
+          example: test@test.com
+          type: string
+          x-go-name: Email
+        id:
+          example: 1
+          format: int64
+          type: integer
+          x-go-name: ID
+        name:
+          example: Иван Иванов
+          type: string
+          x-go-name: Name
+      type: object
+schemes:
+- https
+security:
+- oauth2: []
+securityDefinitions:
+  oauth2:
+    authorizationUrl: ""
+    in: header
+    tokenUrl: /auth/sign_in
+    type: oauth2
+swagger: "2.0"
