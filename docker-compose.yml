@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+
+  redis:
+    image: redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    ports:
+      - 6379:6379
+
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    env_file:
+      - db.env
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - database-data:/var/lib/postgresql/data/
+
+  app:
+    build: .
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    volumes:
+      - ./images:/app/images
+#    environment:
+#      - PRODUCTION=true
+    depends_on:
+      - redis
+      - db
+
+volumes:
+  database-data:
+  redis-data:
