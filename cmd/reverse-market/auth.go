@@ -41,13 +41,25 @@ func (app *Application) signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	url, ok := payload.Claims["picture"].(string)
+	if !ok {
+		app.serverError(w, errors.New("can't retrieve picture url"))
+		return
+	}
+
+	name, err := app.savePhoto(url)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	user, err := app.users.GetByEmail(r.Context(), email)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			user = &models.User{
 				Name:             payload.Claims["name"].(string),
 				Email:            payload.Claims["email"].(string),
-				Avatar:           nil,
+				Photo:            name,
 				DefaultAddressID: nil,
 			}
 			id, err := app.users.Add(r.Context(), user)

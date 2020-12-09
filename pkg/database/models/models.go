@@ -8,9 +8,9 @@ var (
 )
 
 type User struct {
-	ID               int     `json:"id"`
-	Name             string  `json:"name"`
-	Email            string  `json:"email"`
-	Avatar           *string `json:"avatar"`
-	DefaultAddressID *int    `json:"default_address_id"`
+	ID               int    `json:"id"`
+	Name             string `json:"name"`
+	Email            string `json:"email"`
+	Photo            string `json:"photo"`
+	DefaultAddressID *int   `json:"default_address_id"`
 }

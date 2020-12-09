@@ -14,6 +14,7 @@ func (app *Application) route() http.Handler {
 		middleware.Logger,
 		middleware.Recoverer,
 		middleware.RealIP,
+		middleware.RedirectSlashes,
 	)
 
 	r.Post("/auth/sign_in", app.signIn)
@@ -23,6 +24,9 @@ func (app *Application) route() http.Handler {
 
 		r.Get("/user", app.getUser)
 	})
+
+	imageServer := http.FileServer(http.Dir("./images"))
+	r.Get("/images/*", http.StripPrefix("/images", imageServer).ServeHTTP)
 
 	return r
 }

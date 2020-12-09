@@ -23,11 +23,11 @@ func (ur *UserRepository) Add(ctx context.Context, user *models.User) (int, erro
 	}
 	defer conn.Release()
 
-	stmt := "INSERT INTO users (name, email, avatar, default_address_id) " +
+	stmt := "INSERT INTO users (name, email, photo, default_address_id) " +
 		"VALUES ($1, $2, $3, null) RETURNING id"
 
 	var id int
-	if err := conn.QueryRow(ctx, stmt, user.Name, user.Email, user.Avatar).Scan(&id); err != nil {
+	if err := conn.QueryRow(ctx, stmt, user.Name, user.Email, user.Photo).Scan(&id); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr); pgErr.Code == pgerrcode.UniqueViolation {
 			return 0, models.ErrDuplicateEmail
@@ -46,7 +46,7 @@ func (ur *UserRepository) GetById(ctx context.Context, id int) (*models.User, er
 	defer conn.Release()
 
 	user := &models.User{}
-	stmt := "SELECT id, name, email, avatar, default_address_id FROM users WHERE id=$1"
+	stmt := "SELECT id, name, email, photo, COALESCE(default_address_id, -1) as default_address_id FROM users WHERE id=$1"
 	if err := pgxscan.Get(ctx, conn, user, stmt, id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, models.ErrNoRecord
@@ -65,7 +65,7 @@ func (ur *UserRepository) GetByEmail(ctx context.Context, email string) (*models
 	defer conn.Release()
 
 	user := &models.User{}
-	stmt := "SELECT id, name, email, avatar, default_address_id FROM users WHERE email=$1"
+	stmt := "SELECT id, name, email, photo, COALESCE(default_address_id, -1) as default_address_id FROM users WHERE email=$1"
 	if err := pgxscan.Get(ctx, conn, user, stmt, email); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, models.ErrNoRecord
@@ -84,7 +84,7 @@ func (ur *UserRepository) GetAll(ctx context.Context) ([]*models.User, error) {
 	defer conn.Release()
 
 	users := make([]*models.User, 0)
-	stmt := "SELECT id, name, email, avatar, default_address_id FROM users WHERE id=$1"
+	stmt := "SELECT id, name, email, photo, COALESCE(default_address_id, -1) as default_address_id FROM users WHERE id=$1"
 	if err := pgxscan.Select(ctx, conn, &users, stmt); err != nil {
 		return nil, err
 	}
@@ -99,9 +99,14 @@ func (ur *UserRepository) Update(ctx context.Context, user *models.User) error {
 	}
 	defer conn.Release()
 
-	stmt := "UPDATE users SET name=$1, email=$2, avatar=$3, default_address_id=$4 WHERE id=$5"
+	stmt := "UPDATE users SET name=$1, email=$2, photo=$3, default_address_id=$4 WHERE id=$5"
 
-	if _, err := conn.Exec(ctx, stmt, user.Name, user.Email, user.Avatar, user.DefaultAddressID, user.ID); err != nil {
+	addressId := user.DefaultAddressID
+	if addressId != nil && *addressId == -1 {
+		addressId = nil
+	}
+
+	if _, err := conn.Exec(ctx, stmt, user.Name, user.Email, user.Photo, addressId, user.ID); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr); pgErr.Code == pgerrcode.UniqueViolation {
 			return models.ErrDuplicateEmail
