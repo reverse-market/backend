@@ -18,7 +18,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./images:/app/images
-#    environment:
+    environment:
+      - TOKEN_TTL=24h
 #      - PRODUCTION=true
     depends_on:
       - db

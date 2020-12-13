@@ -25,6 +25,17 @@ func (app *Application) route() http.Handler {
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/", app.getUser)
 			r.Put("/", app.updateUser)
+
+			r.Route("/addresses", func(r chi.Router) {
+				r.Get("/", app.getUserAddresses)
+				r.Post("/", app.addAddress)
+
+				r.Route("/{addressID}", func(r chi.Router) {
+					r.Get("/", app.getAddress)
+					r.Put("/", app.updateAddress)
+					r.Delete("/", app.deleteAddress)
+				})
+			})
 		})
 	})
 

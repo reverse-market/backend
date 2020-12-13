@@ -18,6 +18,8 @@ func initApp() (*Application, func(), error) {
 		postgres.NewPsqlPool,
 		wire.Struct(new(postgres.UserRepository), "*"),
 		wire.Bind(new(usersRepository), new(*postgres.UserRepository)),
+		wire.Struct(new(postgres.AddressRepository), "*"),
+		wire.Bind(new(addressesRepository), new(*postgres.AddressRepository)),
 		wire.Struct(new(Application), "*"),
 	)
 
