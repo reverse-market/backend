@@ -12,7 +12,7 @@ func (app *Application) getUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := app.users.GetById(r.Context(), id)
+	user, err := app.users.GetByID(r.Context(), id)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -30,7 +30,7 @@ func (app *Application) updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := app.users.GetById(r.Context(), id)
+	user, err := app.users.GetByID(r.Context(), id)
 	if err != nil {
 		app.serverError(w, err)
 		return

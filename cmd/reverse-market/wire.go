@@ -20,6 +20,10 @@ func initApp() (*Application, func(), error) {
 		wire.Bind(new(usersRepository), new(*postgres.UserRepository)),
 		wire.Struct(new(postgres.AddressRepository), "*"),
 		wire.Bind(new(addressesRepository), new(*postgres.AddressRepository)),
+		wire.Struct(new(postgres.CategoriesRepository), "*"),
+		wire.Bind(new(categoriesRepository), new(*postgres.CategoriesRepository)),
+		wire.Struct(new(postgres.TagsRepository), "*"),
+		wire.Bind(new(tagsRepository), new(*postgres.TagsRepository)),
 		wire.Struct(new(Application), "*"),
 	)
 

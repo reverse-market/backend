@@ -38,7 +38,7 @@ func (ur *UserRepository) Add(ctx context.Context, user *models.User) (int, erro
 	return id, nil
 }
 
-func (ur *UserRepository) GetById(ctx context.Context, id int) (*models.User, error) {
+func (ur *UserRepository) GetByID(ctx context.Context, id int) (*models.User, error) {
 	conn, err := ur.DB.Acquire(ctx)
 	if err != nil {
 		return nil, err

@@ -31,7 +31,7 @@ func (app *Application) auth(next http.Handler) http.Handler {
 			return
 		}
 
-		if _, err := app.users.GetById(r.Context(), id); err != nil {
+		if _, err := app.users.GetByID(r.Context(), id); err != nil {
 			if errors.Is(err, models.ErrNoRecord) {
 				app.clientError(w, err, http.StatusUnauthorized)
 				return

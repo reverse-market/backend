@@ -32,7 +32,7 @@ func (ar *AddressRepository) Add(ctx context.Context, address *models.Address) (
 	return id, nil
 }
 
-func (ar *AddressRepository) GetById(ctx context.Context, id int) (*models.Address, error) {
+func (ar *AddressRepository) GetByID(ctx context.Context, id int) (*models.Address, error) {
 	conn, err := ar.DB.Acquire(ctx)
 	if err != nil {
 		return nil, err

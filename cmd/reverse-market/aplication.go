@@ -8,11 +8,13 @@ import (
 )
 
 type Application struct {
-	config    *config
-	loggers   *loggers
-	tokens    tokensManager
-	users     usersRepository
-	addresses addressesRepository
+	config     *config
+	loggers    *loggers
+	tokens     tokensManager
+	users      usersRepository
+	addresses  addressesRepository
+	categories categoriesRepository
+	tags       tagsRepository
 }
 
 type loggers struct {
@@ -27,7 +29,7 @@ type tokensManager interface {
 
 type usersRepository interface {
 	Add(context.Context, *models.User) (int, error)
-	GetById(context.Context, int) (*models.User, error)
+	GetByID(context.Context, int) (*models.User, error)
 	GetByEmail(context.Context, string) (*models.User, error)
 	GetAll(context.Context) ([]*models.User, error)
 	Update(context.Context, *models.User) error
@@ -36,8 +38,18 @@ type usersRepository interface {
 
 type addressesRepository interface {
 	Add(context.Context, *models.Address) (int, error)
-	GetById(context.Context, int) (*models.Address, error)
+	GetByID(context.Context, int) (*models.Address, error)
 	GetByUserID(context.Context, int) ([]*models.Address, error)
 	Update(context.Context, *models.Address) error
 	Delete(ctx context.Context, id int) error
+}
+
+type categoriesRepository interface {
+	GetByID(context.Context, int) (*models.Category, error)
+	GetAll(context.Context) ([]*models.Category, error)
+}
+
+type tagsRepository interface {
+	GetByID(context.Context, int) (*models.Tag, error)
+	GetAll(context.Context, *models.TagFilters) ([]*models.Tag, error)
 }

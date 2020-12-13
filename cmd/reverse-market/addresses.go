@@ -76,7 +76,7 @@ func (app *Application) getAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	address, err := app.addresses.GetById(r.Context(), id)
+	address, err := app.addresses.GetByID(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.clientError(w, err, http.StatusNotFound)
@@ -112,7 +112,7 @@ func (app *Application) updateAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	address, err := app.addresses.GetById(r.Context(), id)
+	address, err := app.addresses.GetByID(r.Context(), id)
 	if err != nil {
 		app.serverError(w, AnotherUserAddressError)
 		return
@@ -146,7 +146,7 @@ func (app *Application) deleteAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	address, err := app.addresses.GetById(r.Context(), id)
+	address, err := app.addresses.GetByID(r.Context(), id)
 	if err != nil {
 		app.serverError(w, err)
 		return

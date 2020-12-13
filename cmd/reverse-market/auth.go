@@ -47,7 +47,7 @@ func (app *Application) signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name, err := app.savePhoto(url)
+	name, err := savePhoto(url)
 	if err != nil {
 		app.serverError(w, err)
 		return

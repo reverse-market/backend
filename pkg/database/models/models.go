@@ -34,3 +34,20 @@ type AddressInfo struct {
 	FirstName  string `json:"first_name"`
 	FatherName string `json:"father_name"`
 }
+
+type Category struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Photo string `json:"photo"`
+}
+
+type Tag struct {
+	ID         int    `json:"id"`
+	CategoryID *int   `json:"-"`
+	Name       string `json:"name"`
+}
+
+type TagFilters struct {
+	CategoryID *int
+	Search     string
+}

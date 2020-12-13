@@ -19,6 +19,16 @@ func (app *Application) route() http.Handler {
 
 	r.Post("/auth/sign_in", app.signIn)
 
+	r.Route("/categories", func(r chi.Router) {
+		r.Get("/", app.getAllCategories)
+		r.Get("/{categoryID}", app.getCategory)
+	})
+
+	r.Route("/tags", func(r chi.Router) {
+		r.Get("/", app.getAllTags)
+		r.Get("/{tagID}", app.getTag)
+	})
+
 	r.With(app.auth).Route("/", func(r chi.Router) {
 		r.Get("/auth/check", app.authCheck)
 

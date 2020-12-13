@@ -7,7 +7,9 @@ package main
 
 import (
 	"github.com/reverse-market/backend/pkg/database/postgres"
+)
 
+import (
 	_ "github.com/reverse-market/backend/doc"
 )
 
@@ -28,11 +30,23 @@ func initApp() (*Application, func(), error) {
 	userRepository := &postgres.UserRepository{
 		DB: pool,
 	}
+	addressRepository := &postgres.AddressRepository{
+		DB: pool,
+	}
+	postgresCategoriesRepository := &postgres.CategoriesRepository{
+		DB: pool,
+	}
+	postgresTagsRepository := &postgres.TagsRepository{
+		DB: pool,
+	}
 	application := &Application{
-		config:  mainConfig,
-		loggers: mainLoggers,
-		tokens:  manager,
-		users:   userRepository,
+		config:     mainConfig,
+		loggers:    mainLoggers,
+		tokens:     manager,
+		users:      userRepository,
+		addresses:  addressRepository,
+		categories: postgresCategoriesRepository,
+		tags:       postgresTagsRepository,
 	}
 	return application, func() {
 		cleanup()
