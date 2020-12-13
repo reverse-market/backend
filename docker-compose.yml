@@ -1,15 +1,6 @@
 version: '3'
 
 services:
-
-  redis:
-    image: redis
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - redis-data:/data
-    ports:
-      - 6379:6379
-
   db:
     image: postgres
     ports:
@@ -30,7 +21,6 @@ services:
 #    environment:
 #      - PRODUCTION=true
     depends_on:
-      - redis
       - db
 
 volumes:

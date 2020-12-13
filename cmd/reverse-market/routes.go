@@ -22,7 +22,10 @@ func (app *Application) route() http.Handler {
 	r.With(app.auth).Route("/", func(r chi.Router) {
 		r.Get("/auth/check", app.authCheck)
 
-		r.Get("/user", app.getUser)
+		r.Route("/user", func(r chi.Router) {
+			r.Get("/", app.getUser)
+			r.Put("/", app.updateUser)
+		})
 	})
 
 	imageServer := http.FileServer(http.Dir("./images"))
