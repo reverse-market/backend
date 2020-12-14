@@ -31,6 +31,7 @@ func (app *Application) route() http.Handler {
 
 	r.With(app.auth).Route("/", func(r chi.Router) {
 		r.Get("/auth/check", app.authCheck)
+		r.Post("/images", app.uploadPhoto)
 
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/", app.getUser)

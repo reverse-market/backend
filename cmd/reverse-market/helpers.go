@@ -25,17 +25,7 @@ func (app *Application) clientError(w http.ResponseWriter, err error, status int
 	http.Error(w, http.StatusText(status), status)
 }
 
-func savePhoto(url string) (string, error) {
-	if url == "" {
-		return "", nil
-	}
-
-	response, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-
+func savePhoto(source io.Reader) (string, error) {
 	file, err := ioutil.TempFile("images", "*.jpg")
 	if err != nil {
 		return "", err
@@ -46,7 +36,7 @@ func savePhoto(url string) (string, error) {
 		return "", err
 	}
 
-	if _, err := io.Copy(file, response.Body); err != nil {
+	if _, err := io.Copy(file, source); err != nil {
 		return "", err
 	}
 

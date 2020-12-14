@@ -47,10 +47,20 @@ func (app *Application) signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name, err := savePhoto(url)
-	if err != nil {
-		app.serverError(w, err)
-		return
+	photoName := ""
+	if url != "" {
+		response, err := http.Get(url)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer response.Body.Close()
+
+		photoName, err = savePhoto(response.Body)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
 	}
 
 	user, err := app.users.GetByEmail(r.Context(), email)
@@ -59,7 +69,7 @@ func (app *Application) signIn(w http.ResponseWriter, r *http.Request) {
 			user = &models.User{
 				Name:             payload.Claims["name"].(string),
 				Email:            payload.Claims["email"].(string),
-				Photo:            name,
+				Photo:            photoName,
 				DefaultAddressID: nil,
 			}
 			id, err := app.users.Add(r.Context(), user)
