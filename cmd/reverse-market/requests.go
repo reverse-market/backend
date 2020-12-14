@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"github.com/go-chi/chi"
 	"github.com/reverse-market/backend/pkg/database/models"
+	"github.com/reverse-market/backend/pkg/simpletime"
 	"net/http"
-	"strconv"
+	"time"
 )
 
 type RequestWithBestProposal struct {
@@ -23,9 +23,10 @@ func (app *Application) addRequest(w http.ResponseWriter, r *http.Request) {
 
 	request := &models.Request{UserID: userID}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		app.serverError(w, err)
+		app.clientError(w, err, http.StatusBadRequest)
 		return
 	}
+	request.Date = simpletime.SimpleTime(time.Now())
 
 	if _, err := app.requests.Add(r.Context(), request); err != nil {
 		app.serverError(w, err)
@@ -50,10 +51,15 @@ func (app *Application) getUserRequests(w http.ResponseWriter, r *http.Request) 
 
 	withProposals := make([]*RequestWithBestProposal, len(requests))
 	for i, req := range requests {
-		withProposals[i] = &RequestWithBestProposal{
-			Request:        req,
-			BestProposalID: nil,
+		withProposals[i] = &RequestWithBestProposal{Request: req}
+		bestID, err := app.proposals.GetBestForRequest(r.Context(), req.ID)
+		if err != nil {
+			if errors.Is(err, models.ErrNoRecord) {
+				continue
+			}
+			app.serverError(w, err)
 		}
+		withProposals[i].BestProposalID = &bestID
 	}
 
 	if err := json.NewEncoder(w).Encode(withProposals); err != nil {
@@ -62,26 +68,23 @@ func (app *Application) getUserRequests(w http.ResponseWriter, r *http.Request) 
 }
 
 func (app *Application) getPublicRequest(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "requestID"))
-	if err != nil {
-		app.clientError(w, err, http.StatusBadRequest)
+	request, ok := r.Context().Value(contextKeyRequest).(*models.Request)
+	if !ok {
+		app.serverError(w, ErrCantRetrieveID)
 		return
 	}
 
-	request, err := app.requests.GetByID(r.Context(), id)
+	withProposal := &RequestWithBestProposal{Request: request}
+	bestID, err := app.proposals.GetBestForRequest(r.Context(), request.ID)
 	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			app.clientError(w, err, http.StatusNotFound)
-			return
+		if !errors.Is(err, models.ErrNoRecord) {
+			app.serverError(w, err)
 		}
-		app.serverError(w, err)
-		return
+	} else {
+		withProposal.BestProposalID = &bestID
 	}
 
-	if err := json.NewEncoder(w).Encode(&RequestWithBestProposal{
-		Request:        request,
-		BestProposalID: nil,
-	}); err != nil {
+	if err := json.NewEncoder(w).Encode(withProposal); err != nil {
 		app.serverError(w, err)
 	}
 }
@@ -93,10 +96,17 @@ func (app *Application) getUserRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&RequestWithBestProposal{
-		Request:        request,
-		BestProposalID: nil,
-	}); err != nil {
+	withProposal := &RequestWithBestProposal{Request: request}
+	bestID, err := app.proposals.GetBestForRequest(r.Context(), request.ID)
+	if err != nil {
+		if !errors.Is(err, models.ErrNoRecord) {
+			app.serverError(w, err)
+		}
+	} else {
+		withProposal.BestProposalID = &bestID
+	}
+
+	if err := json.NewEncoder(w).Encode(withProposal); err != nil {
 		app.serverError(w, err)
 	}
 }
@@ -110,7 +120,7 @@ func (app *Application) updateRequest(w http.ResponseWriter, r *http.Request) {
 
 	withProposal := &RequestWithBestProposal{Request: request}
 	if err := json.NewDecoder(r.Body).Decode(&withProposal); err != nil {
-		app.serverError(w, err)
+		app.clientError(w, err, http.StatusBadRequest)
 		return
 	}
 

@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"github.com/reverse-market/backend/pkg/simpletime"
 )
 
 var (
@@ -55,18 +56,34 @@ type TagFilters struct {
 }
 
 type Request struct {
-	ID          int      `json:"id"`
-	UserID      int      `json:"-"`
-	CategoryID  int      `json:"category_id"`
-	Name        string   `json:"name"`
-	ItemName    string   `json:"item_name"`
-	Description string   `json:"description"`
-	Photos      []string `json:"photos"`
-	Price       int      `json:"price"`
-	Quantity    int      `json:"quantity"`
-	Date        string   `json:"date"`
+	ID          int                   `json:"id"`
+	UserID      int                   `json:"-"`
+	CategoryID  int                   `json:"category_id"`
+	Name        string                `json:"name"`
+	ItemName    string                `json:"item_name"`
+	Description string                `json:"description"`
+	Photos      []string              `json:"photos"`
+	Price       int                   `json:"price"`
+	Quantity    int                   `json:"quantity"`
+	Date        simpletime.SimpleTime `json:"date"`
+	Finished    bool                  `json:"-"`
 	Tags        []*struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"tags"`
+}
+
+type Proposal struct {
+	ID          int                   `json:"id"`
+	UserID      int                   `json:"-"`
+	Username    string                `json:"username"`
+	RequestID   int                   `json:"request_id"`
+	Name        string                `json:"name"`
+	ItemName    string                `json:"item_name"`
+	Description string                `json:"description"`
+	Photos      []string              `json:"photos"`
+	Price       int                   `json:"price"`
+	Quantity    int                   `json:"quantity"`
+	Date        simpletime.SimpleTime `json:"date"`
+	BoughtById  *int                  `json:"-"`
 }

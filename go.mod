@@ -15,6 +15,7 @@ require (
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/jackc/pgconn v1.7.2
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
+	github.com/jackc/pgtype v1.6.1
 	github.com/jackc/pgx/v4 v4.9.2
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect

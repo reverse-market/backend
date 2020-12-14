@@ -16,6 +16,7 @@ type Application struct {
 	categories categoriesRepository
 	tags       tagsRepository
 	requests   requestsRepository
+	proposals  proposalsRepository
 }
 
 type loggers struct {
@@ -61,4 +62,15 @@ type requestsRepository interface {
 	GetByUserID(context.Context, int, string) ([]*models.Request, error)
 	Update(context.Context, *models.Request) error
 	Delete(context.Context, int) error
+}
+
+type proposalsRepository interface {
+	Add(context.Context, *models.Proposal) (int, error)
+	GetByID(context.Context, int) (*models.Proposal, error)
+	GetByUserIDSold(context.Context, int) ([]*models.Proposal, error)
+	GetByUserIDBought(context.Context, int) ([]*models.Proposal, error)
+	Update(context.Context, *models.Proposal) error
+	Delete(context.Context, int) error
+	Buy(context.Context, int, int) error
+	GetBestForRequest(context.Context, int) (int, error)
 }

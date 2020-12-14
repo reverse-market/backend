@@ -41,7 +41,8 @@ create table if not exists requests
     photos      text[] not null,
     price       int    not null,
     quantity    int    not null,
-    date        text   not null
+    date        date   not null default current_date,
+    finished    bool   not null default false
 );
 
 create table if not exists requests_tags
@@ -61,6 +62,7 @@ SELECT r.id,
        r.price,
        r.quantity,
        r.date,
+       r.finished,
        jsonb_agg(jsonb_build_object(
                'id', t.id,
                'name', t.name
@@ -69,6 +71,36 @@ FROM requests r
          LEFT JOIN requests_tags rt on r.id = rt.request_id
          JOIN tags t on rt.tag_id = t.id
 GROUP BY r.id;
+
+create table if not exists proposals
+(
+    id           serial primary key,
+    user_id      int    not null references users on delete cascade,
+    request_id   int    not null references requests on delete cascade,
+    description  text   not null,
+    photos       text[] not null,
+    price        int    not null,
+    quantity     int    not null,
+    date         text   not null,
+    bought_by_id int    references users on delete set null default null
+);
+
+create or replace view proposals_view as
+SELECT p.id,
+       p.user_id,
+       COALESCE(u.name, '') as username,
+       p.request_id,
+       r.name,
+       r.item_name,
+       p.description,
+       p.photos,
+       p.price,
+       p.quantity,
+       p.date,
+       p.bought_by_id
+FROM proposals p
+         JOIN requests r on p.request_id = r.id
+         LEFT JOIN users u on u.id = p.user_id;
 
 INSERT INTO categories (id, name, photo)
 VALUES (1, 'Недвижимость', '/images/property.jpeg');

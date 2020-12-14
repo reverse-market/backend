@@ -85,7 +85,7 @@ func (rr *RequestsRepository) GetByUserID(ctx context.Context, userID int, searc
 	}
 	defer conn.Release()
 
-	stmt := "SELECT * FROM requests_view WHERE user_id=$1 AND " +
+	stmt := "SELECT * FROM requests_view WHERE finished=false AND user_id=$1 AND " +
 		"($2 = '' OR " +
 		"LOWER(name) LIKE CONCAT('%', $2, '%') OR " +
 		"LOWER(item_name) LIKE CONCAT('%', $2, '%') OR " +

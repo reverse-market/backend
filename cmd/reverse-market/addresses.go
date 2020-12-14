@@ -20,7 +20,7 @@ func (app *Application) addAddress(w http.ResponseWriter, r *http.Request) {
 
 	address := &models.Address{UserID: userID}
 	if err := json.NewDecoder(r.Body).Decode(&address.Info); err != nil {
-		app.serverError(w, err)
+		app.clientError(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -81,7 +81,7 @@ func (app *Application) updateAddress(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&address.Info); err != nil {
-		app.serverError(w, err)
+		app.clientError(w, err, http.StatusBadRequest)
 		return
 	}
 

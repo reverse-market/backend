@@ -42,6 +42,9 @@ func initApp() (*Application, func(), error) {
 	postgresRequestsRepository := &postgres.RequestsRepository{
 		DB: pool,
 	}
+	postgresProposalsRepository := &postgres.ProposalsRepository{
+		DB: pool,
+	}
 	application := &Application{
 		config:     mainConfig,
 		loggers:    mainLoggers,
@@ -51,6 +54,7 @@ func initApp() (*Application, func(), error) {
 		categories: postgresCategoriesRepository,
 		tags:       postgresTagsRepository,
 		requests:   postgresRequestsRepository,
+		proposals:  postgresProposalsRepository,
 	}
 	return application, func() {
 		cleanup()
