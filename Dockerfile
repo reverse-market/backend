@@ -2,10 +2,10 @@ FROM golang:alpine AS builder
 WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
+RUN go get -u github.com/google/wire/cmd/wire
 COPY cmd cmd
 COPY pkg pkg
 COPY doc doc
-RUN go get -u github.com/google/wire/cmd/wire
 RUN cd cmd/reverse-market && wire
 RUN CGO_ENABLED=0 GOOS=linux go build -o app ./cmd/reverse-market
 

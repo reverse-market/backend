@@ -1,6 +1,8 @@
 package models
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ErrDuplicateEmail = errors.New("duplicate email")
@@ -50,4 +52,21 @@ type Tag struct {
 type TagFilters struct {
 	CategoryID *int
 	Search     string
+}
+
+type Request struct {
+	ID          int      `json:"id"`
+	UserID      int      `json:"-"`
+	CategoryID  int      `json:"category_id"`
+	Name        string   `json:"name"`
+	ItemName    string   `json:"item_name"`
+	Description string   `json:"description"`
+	Photos      []string `json:"photos"`
+	Price       int      `json:"price"`
+	Quantity    int      `json:"quantity"`
+	Date        string   `json:"date"`
+	Tags        []*struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"tags"`
 }

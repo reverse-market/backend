@@ -15,6 +15,7 @@ type Application struct {
 	addresses  addressesRepository
 	categories categoriesRepository
 	tags       tagsRepository
+	requests   requestsRepository
 }
 
 type loggers struct {
@@ -52,4 +53,12 @@ type categoriesRepository interface {
 type tagsRepository interface {
 	GetByID(context.Context, int) (*models.Tag, error)
 	GetAll(context.Context, *models.TagFilters) ([]*models.Tag, error)
+}
+
+type requestsRepository interface {
+	Add(context.Context, *models.Request) (int, error)
+	GetByID(context.Context, int) (*models.Request, error)
+	GetByUserID(context.Context, int, string) ([]*models.Request, error)
+	Update(context.Context, *models.Request) error
+	Delete(context.Context, int) error
 }

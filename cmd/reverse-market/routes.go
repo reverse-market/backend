@@ -29,6 +29,11 @@ func (app *Application) route() http.Handler {
 		r.Get("/{tagID}", app.getTag)
 	})
 
+	r.Route("/requests", func(r chi.Router) {
+		// TODO: public requests search
+		r.Get("/{requestID}", app.getPublicRequest)
+	})
+
 	r.With(app.auth).Route("/", func(r chi.Router) {
 		r.Get("/auth/check", app.authCheck)
 		r.Post("/images", app.uploadPhoto)
@@ -41,10 +46,21 @@ func (app *Application) route() http.Handler {
 				r.Get("/", app.getUserAddresses)
 				r.Post("/", app.addAddress)
 
-				r.Route("/{addressID}", func(r chi.Router) {
+				r.With(app.addressCtx).Route("/{addressID}", func(r chi.Router) {
 					r.Get("/", app.getAddress)
 					r.Put("/", app.updateAddress)
 					r.Delete("/", app.deleteAddress)
+				})
+			})
+
+			r.Route("/requests", func(r chi.Router) {
+				r.Get("/", app.getUserRequests)
+				r.Post("/", app.addRequest)
+
+				r.With(app.requestCtx).Route("/{requestID}", func(r chi.Router) {
+					r.Get("/", app.getUserRequest)
+					r.Put("/", app.updateRequest)
+					r.Delete("/", app.deleteRequest)
 				})
 			})
 		})

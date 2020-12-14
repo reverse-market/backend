@@ -2,19 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
-	"github.com/go-chi/chi"
 	"github.com/reverse-market/backend/pkg/database/models"
 	"net/http"
-	"strconv"
 )
 
 type AddressFlattened struct {
 	ID int `json:"id"`
-	models.AddressInfo
+	*models.AddressInfo
 }
-
-var AnotherUserAddressError = errors.New("another user's address")
 
 func (app *Application) addAddress(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(contextKeyID).(int)
@@ -54,7 +49,7 @@ func (app *Application) getUserAddresses(w http.ResponseWriter, r *http.Request)
 	for i, addr := range addresses {
 		flattened[i] = &AddressFlattened{
 			ID:          addr.ID,
-			AddressInfo: addr.Info,
+			AddressInfo: &addr.Info,
 		}
 	}
 
@@ -64,62 +59,24 @@ func (app *Application) getUserAddresses(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *Application) getAddress(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(contextKeyID).(int)
+	address, ok := r.Context().Value(contextKeyAddress).(*models.Address)
 	if !ok {
 		app.serverError(w, ErrCantRetrieveID)
 		return
 	}
 
-	id, err := strconv.Atoi(chi.URLParam(r, "addressID"))
-	if err != nil {
-		app.clientError(w, err, http.StatusBadRequest)
-		return
-	}
-
-	address, err := app.addresses.GetByID(r.Context(), id)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			app.clientError(w, err, http.StatusNotFound)
-			return
-		}
-		app.serverError(w, err)
-		return
-	}
-
-	if address.UserID != userID {
-		app.clientError(w, AnotherUserAddressError, http.StatusForbidden)
-		return
-	}
-
 	if err := json.NewEncoder(w).Encode(&AddressFlattened{
 		ID:          address.ID,
-		AddressInfo: address.Info,
+		AddressInfo: &address.Info,
 	}); err != nil {
 		app.serverError(w, err)
 	}
 }
 
 func (app *Application) updateAddress(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(contextKeyID).(int)
+	address, ok := r.Context().Value(contextKeyAddress).(*models.Address)
 	if !ok {
 		app.serverError(w, ErrCantRetrieveID)
-		return
-	}
-
-	id, err := strconv.Atoi(chi.URLParam(r, "addressID"))
-	if err != nil {
-		app.clientError(w, err, http.StatusBadRequest)
-		return
-	}
-
-	address, err := app.addresses.GetByID(r.Context(), id)
-	if err != nil {
-		app.serverError(w, AnotherUserAddressError)
-		return
-	}
-
-	if address.UserID != userID {
-		app.clientError(w, err, http.StatusForbidden)
 		return
 	}
 
@@ -134,30 +91,13 @@ func (app *Application) updateAddress(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) deleteAddress(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(contextKeyID).(int)
+	address, ok := r.Context().Value(contextKeyAddress).(*models.Address)
 	if !ok {
 		app.serverError(w, ErrCantRetrieveID)
 		return
 	}
 
-	id, err := strconv.Atoi(chi.URLParam(r, "addressID"))
-	if err != nil {
-		app.clientError(w, AnotherUserAddressError, http.StatusBadRequest)
-		return
-	}
-
-	address, err := app.addresses.GetByID(r.Context(), id)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	if address.UserID != userID {
-		app.clientError(w, err, http.StatusForbidden)
-		return
-	}
-
-	if err := app.addresses.Delete(r.Context(), id); err != nil {
+	if err := app.addresses.Delete(r.Context(), address.ID); err != nil {
 		app.serverError(w, err)
 		return
 	}

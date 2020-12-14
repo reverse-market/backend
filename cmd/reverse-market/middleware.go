@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/go-chi/chi"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/reverse-market/backend/pkg/database/models"
@@ -11,9 +13,17 @@ import (
 
 type contextKey string
 
-const contextKeyID = contextKey("id")
+const (
+	contextKeyID      = contextKey("id")
+	contextKeyAddress = contextKey("address")
+	contextKeyRequest = contextKey("request")
+)
 
-var ErrCantRetrieveID = errors.New("can't retrieve id")
+var (
+	ErrCantRetrieveID       = errors.New("can't retrieve id")
+	AnotherUserAddressError = errors.New("another user's address")
+	AnotherUserRequestError = errors.New("another user's request")
+)
 
 func (app *Application) auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -42,5 +52,73 @@ func (app *Application) auth(next http.Handler) http.Handler {
 
 		idContext := context.WithValue(r.Context(), contextKeyID, id)
 		next.ServeHTTP(w, r.WithContext(idContext))
+	})
+}
+
+func (app *Application) addressCtx(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, ok := r.Context().Value(contextKeyID).(int)
+		if !ok {
+			app.serverError(w, ErrCantRetrieveID)
+			return
+		}
+
+		id, err := strconv.Atoi(chi.URLParam(r, "addressID"))
+		if err != nil {
+			app.clientError(w, err, http.StatusBadRequest)
+			return
+		}
+
+		address, err := app.addresses.GetByID(r.Context(), id)
+		if err != nil {
+			if errors.Is(err, models.ErrNoRecord) {
+				app.clientError(w, err, http.StatusNotFound)
+				return
+			}
+			app.serverError(w, err)
+			return
+		}
+
+		if address.UserID != userID {
+			app.clientError(w, AnotherUserAddressError, http.StatusForbidden)
+			return
+		}
+
+		addressCtx := context.WithValue(r.Context(), contextKeyAddress, address)
+		next.ServeHTTP(w, r.WithContext(addressCtx))
+	})
+}
+
+func (app *Application) requestCtx(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, ok := r.Context().Value(contextKeyID).(int)
+		if !ok {
+			app.serverError(w, ErrCantRetrieveID)
+			return
+		}
+
+		id, err := strconv.Atoi(chi.URLParam(r, "requestID"))
+		if err != nil {
+			app.clientError(w, err, http.StatusBadRequest)
+			return
+		}
+
+		request, err := app.requests.GetByID(r.Context(), id)
+		if err != nil {
+			if errors.Is(err, models.ErrNoRecord) {
+				app.clientError(w, err, http.StatusNotFound)
+				return
+			}
+			app.serverError(w, err)
+			return
+		}
+
+		if request.UserID != userID {
+			app.clientError(w, AnotherUserRequestError, http.StatusForbidden)
+			return
+		}
+
+		requestCtx := context.WithValue(r.Context(), contextKeyRequest, request)
+		next.ServeHTTP(w, r.WithContext(requestCtx))
 	})
 }

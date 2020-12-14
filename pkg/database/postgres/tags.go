@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -42,10 +41,10 @@ func (tr *TagsRepository) GetAll(ctx context.Context, filters *models.TagFilters
 	defer conn.Release()
 
 	stmt := "SELECT id, category_id, name FROM tags WHERE ($1::int IS NULL OR category_id=$1 OR category_id IS NULL) " +
-		"AND LOWER(name) LIKE $2"
+		"AND ($2 = '' OR LOWER(name) LIKE CONCAT('%', $2, '%'))"
 
 	tags := make([]*models.Tag, 0)
-	if err := pgxscan.Select(ctx, conn, &tags, stmt, filters.CategoryID, fmt.Sprintf("%%%s%%", filters.Search)); err != nil {
+	if err := pgxscan.Select(ctx, conn, &tags, stmt, filters.CategoryID, filters.Search); err != nil {
 		return nil, err
 	}
 
