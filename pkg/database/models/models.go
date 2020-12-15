@@ -55,6 +55,11 @@ type TagFilters struct {
 	Search     string
 }
 
+type TagInRequest struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 type Request struct {
 	ID          int                   `json:"id"`
 	UserID      int                   `json:"-"`
@@ -68,10 +73,7 @@ type Request struct {
 	Quantity    int                   `json:"quantity"`
 	Date        simpletime.SimpleTime `json:"date"`
 	Finished    bool                  `json:"-"`
-	Tags        []*struct {
-		ID   int    `json:"id"`
-		Name string `json:"name"`
-	} `json:"tags"`
+	Tags        []*TagInRequest       `json:"tags"`
 }
 
 type RequestFilters struct {
