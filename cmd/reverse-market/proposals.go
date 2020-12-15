@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"github.com/reverse-market/backend/pkg/database/models"
+	"github.com/reverse-market/backend/pkg/simpletime"
 	"net/http"
+	"time"
 )
 
 func (app *Application) addProposal(w http.ResponseWriter, r *http.Request) {
@@ -18,6 +20,7 @@ func (app *Application) addProposal(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, err, http.StatusBadRequest)
 		return
 	}
+	proposal.Date = simpletime.SimpleTime(time.Now())
 
 	if _, err := app.proposals.Add(r.Context(), proposal); err != nil {
 		app.serverError(w, err)

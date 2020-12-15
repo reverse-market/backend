@@ -29,7 +29,8 @@ func (app *Application) route() http.Handler {
 	})
 
 	r.Route("/requests", func(r chi.Router) {
-		// TODO: public requests search
+		r.Get("/", app.getPublicRequests)
+		r.Get("/prices", app.getPrices)
 		r.With(app.requestCtx(false)).Get("/{requestID}", app.getPublicRequest)
 	})
 

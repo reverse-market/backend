@@ -54,6 +54,7 @@ create table if not exists requests_tags
 create or replace view requests_view as
 SELECT r.id,
        r.user_id,
+       u.name as username,
        r.category_id,
        r.name,
        r.item_name,
@@ -68,9 +69,50 @@ SELECT r.id,
                'name', t.name
            )) as tags
 FROM requests r
+         LEFT JOIN users u on r.user_id = u.id
          LEFT JOIN requests_tags rt on r.id = rt.request_id
          JOIN tags t on rt.tag_id = t.id
-GROUP BY r.id;
+GROUP BY r.id, u.id;
+
+create or replace function search_requests(page int, size int, category int, required_tags int[], price_from int,
+                                           price_to int, sort_column text, sort_direction text, search text)
+    returns setof requests_view as
+$$
+begin
+    return query execute format('
+        SELECT r.id,
+               r.user_id,
+               u.name as username,
+               r.category_id,
+               r.name,
+               r.item_name,
+               r.description,
+               r.photos,
+               r.price,
+               r.quantity,
+               r.date,
+               r.finished,
+               jsonb_agg(jsonb_build_object(
+                       ''id'', t.id,
+                       ''name'', t.name
+                   )) as tags
+        FROM requests r
+                 LEFT JOIN users u on r.user_id = u.id
+                 LEFT JOIN requests_tags rt on r.id = rt.request_id
+                 JOIN tags t on rt.tag_id = t.id
+        WHERE r.finished = false
+          AND ($1 IS NULL OR r.category_id = $1)
+          AND ($3 IS NULL OR r.price >= $3)
+          AND ($4 IS NULL OR r.price <= $4)
+          AND ($5 = '''' or lower(r.name) LIKE ''%%'' || $5 || ''%%''
+                         or lower(r.item_name) LIKE ''%%'' || $5 || ''%%''
+                         or lower(r.description) LIKE ''%%'' || $5 || ''%%'')
+        GROUP BY r.id, u.id, date
+        HAVING array_agg(t.id) @> $2
+        ORDER BY %I %s LIMIT %s OFFSET %s', sort_column, sort_direction, size, size * page)
+        USING category, required_tags, price_from, price_to, search;
+end;
+$$ LANGUAGE plpgsql;
 
 create table if not exists proposals
 (
@@ -81,7 +123,7 @@ create table if not exists proposals
     photos       text[] not null,
     price        int    not null,
     quantity     int    not null,
-    date         text   not null,
+    date         date   not null                            default current_date,
     bought_by_id int    references users on delete set null default null
 );
 

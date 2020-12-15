@@ -1,10 +1,10 @@
 package simpletime
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/jackc/pgtype"
-	"strings"
 	"time"
 )
 
@@ -16,7 +16,7 @@ func (st SimpleTime) MarshalJSON() ([]byte, error) {
 }
 
 func (st *SimpleTime) UnmarshalJSON(data []byte) error {
-	t, err := time.Parse("02.01.2006", strings.Trim(string(data), "\""))
+	t, err := time.Parse("02.01.2006", string(bytes.Trim(data, "\"")))
 	if err != nil {
 		return err
 	}

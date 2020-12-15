@@ -99,6 +99,50 @@ func (rr *RequestsRepository) GetByUserID(ctx context.Context, userID int, searc
 	return requests, nil
 }
 
+func (rr *RequestsRepository) Search(ctx context.Context, filters *models.RequestFilters) ([]*models.Request, error) {
+	conn, err := rr.DB.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	stmt := "SELECT * FROM search_requests($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+
+	requests := make([]*models.Request, 0)
+	if err := pgxscan.Select(ctx, conn, &requests, stmt,
+		filters.Page,
+		filters.Size,
+		filters.CategoryID,
+		filters.Tags,
+		filters.PriceFrom,
+		filters.PriceTo,
+		filters.SortColumn,
+		filters.SortDirection,
+		filters.Search,
+	); err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+}
+
+func (rr *RequestsRepository) GetPricesLimits(ctx context.Context) (int, int, error) {
+	conn, err := rr.DB.Acquire(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer conn.Release()
+
+	stmt := "SELECT COALESCE(MIN(price), 0), COALESCE(MAX(price), 0) FROM requests"
+
+	var min, max int
+	if err := conn.QueryRow(ctx, stmt).Scan(&min, &max); err != nil {
+		return 0, 0, err
+	}
+
+	return min, max, nil
+}
+
 func (rr *RequestsRepository) Update(ctx context.Context, request *models.Request) error {
 	conn, err := rr.DB.Acquire(ctx)
 	if err != nil {

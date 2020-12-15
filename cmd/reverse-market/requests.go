@@ -36,6 +36,31 @@ func (app *Application) addRequest(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+func (app *Application) getPublicRequests(w http.ResponseWriter, r *http.Request) {
+	requests, err := app.requests.Search(r.Context(), getRequestsFilters(r))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	withProposals := make([]*RequestWithBestProposal, len(requests))
+	for i, req := range requests {
+		withProposals[i] = &RequestWithBestProposal{Request: req}
+		bestID, err := app.proposals.GetBestForRequest(r.Context(), req.ID)
+		if err != nil {
+			if errors.Is(err, models.ErrNoRecord) {
+				continue
+			}
+			app.serverError(w, err)
+		}
+		withProposals[i].BestProposalID = &bestID
+	}
+
+	if err := json.NewEncoder(w).Encode(withProposals); err != nil {
+		app.serverError(w, err)
+	}
+}
+
 func (app *Application) getUserRequests(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(contextKeyID).(int)
 	if !ok {
@@ -107,6 +132,21 @@ func (app *Application) getUserRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(withProposal); err != nil {
+		app.serverError(w, err)
+	}
+}
+
+func (app *Application) getPrices(w http.ResponseWriter, r *http.Request) {
+	min, max, err := app.requests.GetPricesLimits(r.Context())
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(struct {
+		Min int `json:"min"`
+		Max int `json:"max"`
+	}{Min: min, Max: max}); err != nil {
 		app.serverError(w, err)
 	}
 }

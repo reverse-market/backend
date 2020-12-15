@@ -58,6 +58,7 @@ type TagFilters struct {
 type Request struct {
 	ID          int                   `json:"id"`
 	UserID      int                   `json:"-"`
+	Username    string                `json:"username"`
 	CategoryID  int                   `json:"category_id"`
 	Name        string                `json:"name"`
 	ItemName    string                `json:"item_name"`
@@ -71,6 +72,18 @@ type Request struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"tags"`
+}
+
+type RequestFilters struct {
+	Page          int
+	Size          int
+	CategoryID    *int
+	Tags          []int
+	PriceFrom     *int
+	PriceTo       *int
+	SortColumn    string
+	SortDirection string
+	Search        string
 }
 
 type Proposal struct {

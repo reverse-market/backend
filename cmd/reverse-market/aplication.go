@@ -60,6 +60,8 @@ type requestsRepository interface {
 	Add(context.Context, *models.Request) (int, error)
 	GetByID(context.Context, int) (*models.Request, error)
 	GetByUserID(context.Context, int, string) ([]*models.Request, error)
+	Search(context.Context, *models.RequestFilters) ([]*models.Request, error)
+	GetPricesLimits(ctx context.Context) (int, int, error)
 	Update(context.Context, *models.Request) error
 	Delete(context.Context, int) error
 }
