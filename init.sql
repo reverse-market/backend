@@ -145,21 +145,21 @@ FROM proposals p
          LEFT JOIN users u on u.id = p.user_id;
 
 INSERT INTO categories (id, name, photo)
-VALUES (1, 'Недвижимость', '/images/property.jpeg');
+VALUES (1, 'Недвижимость', '/images/property.png');
 INSERT INTO categories (id, name, photo)
-VALUES (2, 'Электроника', '/images/electronics.jpeg');
+VALUES (2, 'Электроника', '/images/electronics.png');
 INSERT INTO categories (id, name, photo)
-VALUES (3, 'Хобби и отдых', '/images/hobby.jpeg');
+VALUES (3, 'Хобби и отдых', '/images/hobby.png');
 INSERT INTO categories (id, name, photo)
 VALUES (4, 'Транспорт', '/images/transport.png');
 INSERT INTO categories (id, name, photo)
 VALUES (5, 'Одежда', '/images/clothes.png');
 INSERT INTO categories (id, name, photo)
-VALUES (6, 'Животные', '/images/pets.jpeg');
+VALUES (6, 'Животные', '/images/pets.png');
 INSERT INTO categories (id, name, photo)
 VALUES (7, 'Для дома', '/images/house.png');
 INSERT INTO categories (id, name, photo)
-VALUES (8, 'Прочее', '/images/other.jpeg');
+VALUES (8, 'Прочее', '/images/other.png');
 
 INSERT INTO tags (category_id, name)
 VALUES (1, 'Студия');

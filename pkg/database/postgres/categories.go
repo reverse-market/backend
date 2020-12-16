@@ -40,7 +40,7 @@ func (cr *CategoriesRepository) GetAll(ctx context.Context) ([]*models.Category,
 	}
 	defer conn.Release()
 
-	stmt := "SELECT id, name, photo FROM categories"
+	stmt := "SELECT id, name, photo FROM categories ORDER BY id"
 
 	categories := make([]*models.Category, 0)
 	if err := pgxscan.Select(ctx, conn, &categories, stmt); err != nil {
