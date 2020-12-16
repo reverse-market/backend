@@ -112,23 +112,25 @@ func (rr *RequestsRepository) GetByUserID(ctx context.Context, userID int, searc
 
 func (rr *RequestsRepository) Search(ctx context.Context, filters *models.RequestFilters) ([]*models.Request, error) {
 	requests := make([]*models.Request, 0)
-	sort.Slice(mockRequests, func(i, j int) bool {
+	sorted := make([]*models.Request, len(mockRequests))
+	copy(sorted, mockRequests)
+	sort.Slice(sorted, func(i, j int) bool {
 		if filters.SortColumn == "date" {
 			if filters.SortDirection == "asc" {
-				return time.Time(mockRequests[i].Date).Unix() < time.Time(mockRequests[j].Date).Unix()
+				return time.Time(sorted[i].Date).Unix() < time.Time(sorted[j].Date).Unix()
 			} else {
-				return time.Time(mockRequests[i].Date).Unix() >= time.Time(mockRequests[j].Date).Unix()
+				return time.Time(sorted[i].Date).Unix() >= time.Time(sorted[j].Date).Unix()
 			}
 		} else {
 			if filters.SortDirection == "asc" {
-				return mockRequests[i].Price < mockRequests[j].Price
+				return sorted[i].Price < sorted[j].Price
 			} else {
-				return mockRequests[i].Price < mockRequests[j].Price
+				return sorted[i].Price >= sorted[j].Price
 			}
 		}
 	})
 
-	for i, request := range mockRequests {
+	for i, request := range sorted {
 		if i >= filters.Page*filters.Size && i < (filters.Page+1)*filters.Size &&
 			(filters.CategoryID == nil || request.CategoryID == *filters.CategoryID) &&
 			subslice(filters.Tags, toIDs(request.Tags)) &&
