@@ -42,7 +42,7 @@ func (tr *TagsRepository) GetByID(ctx context.Context, id int) (*models.Tag, err
 func (tr *TagsRepository) GetAll(ctx context.Context, filters *models.TagFilters) ([]*models.Tag, error) {
 	tags := make([]*models.Tag, 0)
 	for _, tag := range mockTags {
-		if (filters.CategoryID == nil || tag.CategoryID == nil || &tag.CategoryID == &filters.CategoryID) &&
+		if (filters.CategoryID == nil || tag.CategoryID == nil || *tag.CategoryID == *filters.CategoryID) &&
 			(filters.Search == "" || strings.Contains(strings.ToLower(tag.Name), filters.Search)) {
 			tags = append(tags, tag)
 		}

@@ -20,6 +20,7 @@ func TestTagsEndpoint(t *testing.T) {
 		wantBody []byte
 	}{
 		{"Get all tags", "/tags", nil, http.StatusOK, []byte(`[{"id":1,"name":"Синий"},{"id":2,"name":"Красный"},{"id":3,"name":"Зелёный"}]`)},
+		{"Get all with category", "/tags?category=1", nil, http.StatusOK, []byte(`[{"id":1,"name":"Синий"},{"id":3,"name":"Зелёный"}]`)},
 		{"Get all tags with search", "/tags?search=синий", nil, http.StatusOK, []byte(`[{"id":1,"name":"Синий"}]`)},
 		{"Get tag with wrong formatted id", "/tags/abc", nil, http.StatusBadRequest, nil},
 		{"Get tag with not existing id", "/tags/0", nil, http.StatusNotFound, nil},
