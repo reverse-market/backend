@@ -24,6 +24,8 @@ func TestUserAddressesEndpoint(t *testing.T) {
 		{"Post wrong formatted body", http.MethodPost, "/user/addresses", []byte("wrong"), http.StatusBadRequest, nil},
 		{"Post correct body", http.MethodPost, "/user/addresses", []byte(`{"name":"name","region":"region","city":"city","street":"street","number":"1","building":"1","appartment":"1","zip":123,"last_name":"Ivanov","first_name":"Ivan","father_name":"Ivanovich"}`), http.StatusCreated, nil},
 		{"Get all addresses", http.MethodGet, "/user/addresses", nil, http.StatusOK, []byte(`[{"id":1,"name":"Mock address 1","region":"Some region","city":"Some city","street":"Mock street","number":"1","building":"1","appartment":"1","zip":123,"last_name":"Ivanov","first_name":"Ivan","father_name":"Ivanovich"}]`)},
+		{"Get address with wrong formatted id", http.MethodGet, "/user/addresses/abc", nil, http.StatusBadRequest, nil},
+		{"Get address with not existing id", http.MethodGet, "/user/addresses/3", nil, http.StatusNotFound, nil},
 		{"Get other user address", http.MethodGet, "/user/addresses/2", nil, http.StatusForbidden, nil},
 		{"Get your address", http.MethodGet, "/user/addresses/1", nil, http.StatusOK, []byte(`{"id":1,"name":"Mock address 1","region":"Some region","city":"Some city","street":"Mock street","number":"1","building":"1","appartment":"1","zip":123,"last_name":"Ivanov","first_name":"Ivan","father_name":"Ivanovich"}`)},
 		{"Update address with empty body", http.MethodPut, "/user/addresses/1", nil, http.StatusBadRequest, nil},
@@ -44,7 +46,6 @@ func TestUserAddressesEndpoint(t *testing.T) {
 
 			if tt.wantCode != recorder.Code {
 				t.Errorf("wrong code: want %v got %v", tt.wantCode, recorder.Code)
-
 			}
 
 			body, err := ioutil.ReadAll(recorder.Body)
