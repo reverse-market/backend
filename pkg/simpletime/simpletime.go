@@ -32,7 +32,7 @@ func (st *SimpleTime) DecodeBinary(ci *pgtype.ConnInfo, src []byte) error {
 
 	dec := &pgtype.Date{}
 	if err := dec.DecodeBinary(ci, src); err != nil {
-		return nil
+		return err
 	}
 
 	*st = SimpleTime(dec.Time)
