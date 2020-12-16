@@ -5,7 +5,6 @@ RUN go mod download
 RUN go get -u github.com/google/wire/cmd/wire
 COPY cmd cmd
 COPY pkg pkg
-COPY doc doc
 RUN cd cmd/reverse-market && wire
 RUN CGO_ENABLED=0 GOOS=linux go build -o app ./cmd/reverse-market
 
