@@ -85,12 +85,13 @@ func (app *Application) updateProposal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&proposal); err != nil {
+	newProposal := *proposal
+	if err := json.NewDecoder(r.Body).Decode(&newProposal); err != nil {
 		app.clientError(w, err, http.StatusBadRequest)
 		return
 	}
 
-	if err := app.proposals.Update(r.Context(), proposal); err != nil {
+	if err := app.proposals.Update(r.Context(), &newProposal); err != nil {
 		app.serverError(w, err)
 	}
 }

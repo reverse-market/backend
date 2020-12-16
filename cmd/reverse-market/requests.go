@@ -158,7 +158,8 @@ func (app *Application) updateRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	withProposal := &RequestWithBestProposal{Request: request}
+	newRequest := *request
+	withProposal := &RequestWithBestProposal{Request: &newRequest}
 	if err := json.NewDecoder(r.Body).Decode(&withProposal); err != nil {
 		app.clientError(w, err, http.StatusBadRequest)
 		return

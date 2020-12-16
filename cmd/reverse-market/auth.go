@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"github.com/reverse-market/backend/pkg/idtoken"
 	"net/http"
 
 	"github.com/reverse-market/backend/pkg/database/models"
-	"google.golang.org/api/idtoken"
 )
 
 func (app *Application) authCheck(w http.ResponseWriter, r *http.Request) {
@@ -29,27 +29,19 @@ func (app *Application) signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payload, err := idtoken.Validate(r.Context(), info.IDToken, "")
+	tokenInfo, err := app.parser.Parse(r.Context(), info.IDToken)
 	if err != nil {
-		app.clientError(w, err, http.StatusUnauthorized)
-		return
-	}
-
-	email, ok := payload.Claims["email"].(string)
-	if !ok {
-		app.serverError(w, errors.New("can't retrieve email"))
-		return
-	}
-
-	url, ok := payload.Claims["picture"].(string)
-	if !ok {
-		app.serverError(w, errors.New("can't retrieve picture url"))
+		if errors.Is(err, idtoken.ErrInvalidToken) {
+			app.clientError(w, err, http.StatusUnauthorized)
+			return
+		}
+		app.serverError(w, err)
 		return
 	}
 
 	photoName := ""
-	if url != "" {
-		response, err := http.Get(url)
+	if tokenInfo.Picture != "" {
+		response, err := http.Get(tokenInfo.Picture)
 		if err != nil {
 			app.serverError(w, err)
 			return
@@ -63,12 +55,12 @@ func (app *Application) signIn(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	user, err := app.users.GetByEmail(r.Context(), email)
+	user, err := app.users.GetByEmail(r.Context(), tokenInfo.Email)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			user = &models.User{
-				Name:             payload.Claims["name"].(string),
-				Email:            payload.Claims["email"].(string),
+				Name:             tokenInfo.Name,
+				Email:            tokenInfo.Email,
 				Photo:            photoName,
 				DefaultAddressID: nil,
 			}

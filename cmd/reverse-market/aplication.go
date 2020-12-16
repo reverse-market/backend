@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/reverse-market/backend/pkg/idtoken"
 	"log"
 
 	"github.com/reverse-market/backend/pkg/database/models"
@@ -10,6 +11,7 @@ import (
 type Application struct {
 	config     *config
 	loggers    *loggers
+	parser     tokenParser
 	tokens     tokensManager
 	users      usersRepository
 	addresses  addressesRepository
@@ -22,6 +24,10 @@ type Application struct {
 type loggers struct {
 	info  *log.Logger
 	error *log.Logger
+}
+
+type tokenParser interface {
+	Parse(context.Context, string) (*idtoken.TokenInfo, error)
 }
 
 type tokensManager interface {

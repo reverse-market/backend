@@ -80,12 +80,13 @@ func (app *Application) updateAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&address.Info); err != nil {
+	newAddress := *address
+	if err := json.NewDecoder(r.Body).Decode(&newAddress.Info); err != nil {
 		app.clientError(w, err, http.StatusBadRequest)
 		return
 	}
 
-	if err := app.addresses.Update(r.Context(), address); err != nil {
+	if err := app.addresses.Update(r.Context(), &newAddress); err != nil {
 		app.serverError(w, err)
 	}
 }

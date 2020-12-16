@@ -23,7 +23,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:     ":" + app.config.Port,
-		Handler:  app.route(),
+		Handler:  app.route(true),
 		ErrorLog: app.loggers.error,
 	}
 

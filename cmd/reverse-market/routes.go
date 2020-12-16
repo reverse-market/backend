@@ -7,11 +7,14 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-func (app *Application) route() http.Handler {
+func (app *Application) route(withLog bool) http.Handler {
 	r := chi.NewMux()
 
+	if withLog {
+		r.Use(middleware.Logger)
+	}
+
 	r.Use(
-		middleware.Logger,
 		middleware.Recoverer,
 		middleware.RealIP,
 		middleware.RedirectSlashes,

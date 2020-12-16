@@ -7,6 +7,7 @@ package main
 
 import (
 	"github.com/reverse-market/backend/pkg/database/postgres"
+	"github.com/reverse-market/backend/pkg/idtoken"
 )
 
 import (
@@ -21,6 +22,7 @@ func initApp() (*Application, func(), error) {
 		return nil, nil, err
 	}
 	mainLoggers := NewLoggers()
+	parser := &idtoken.Parser{}
 	manager := NewJwtManager(mainConfig)
 	postgresConfig := NewPostgresConfig(mainConfig)
 	pool, cleanup, err := postgres.NewPsqlPool(postgresConfig)
@@ -48,6 +50,7 @@ func initApp() (*Application, func(), error) {
 	application := &Application{
 		config:     mainConfig,
 		loggers:    mainLoggers,
+		parser:     parser,
 		tokens:     manager,
 		users:      userRepository,
 		addresses:  addressRepository,
