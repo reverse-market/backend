@@ -37,7 +37,7 @@ func (app *Application) updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(user); err != nil {
-		app.serverError(w, err)
+		app.clientError(w, err, http.StatusBadRequest)
 		return
 	}
 
