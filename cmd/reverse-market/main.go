@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 
-	_ "github.com/reverse-market/backend/doc"
 	"github.com/reverse-market/backend/pkg/database/postgres"
 	"github.com/reverse-market/backend/pkg/jwt"
 	"github.com/xlab/closer"
