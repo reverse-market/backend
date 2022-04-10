@@ -19,7 +19,12 @@ func (app *Application) route(withLog bool) http.Handler {
 		middleware.RealIP,
 		middleware.RedirectSlashes,
 	)
-	r.Post("/auth/sign_in", app.signIn)
+
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/sign_in", app.signIn)
+		r.Post("/refresh", app.refreshTokenHandler)
+		r.Post("/logout", app.logoutUserHandler)
+	})
 
 	r.Route("/categories", func(r chi.Router) {
 		r.Get("/", app.getAllCategories)
@@ -40,7 +45,7 @@ func (app *Application) route(withLog bool) http.Handler {
 	r.With(app.proposalCtx(false)).Get("/proposals/{proposalID}", app.getProposal)
 
 	r.With(app.auth).Route("/", func(r chi.Router) {
-		r.Get("/auth/check", app.authCheck)
+		r.Get("/check", app.authCheck)
 		r.Post("/images", app.uploadPhoto)
 
 		r.Route("/proposals", func(r chi.Router) {

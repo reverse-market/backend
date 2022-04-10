@@ -1,11 +1,13 @@
 package main
 
 import (
+	"crypto/rand"
+	"io"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/reverse-market/backend/pkg/database/postgres"
+	"github.com/reverse-market/backend/pkg/database/redis"
 	"github.com/reverse-market/backend/pkg/jwt"
 	"github.com/xlab/closer"
 )
@@ -23,11 +25,11 @@ func main() {
 	server := &http.Server{
 		Addr:     ":" + app.config.Port,
 		Handler:  app.route(true),
-		ErrorLog: app.loggers.error,
+		ErrorLog: app.loggers.Error(),
 	}
 
-	app.loggers.info.Printf("Started server on port: %v", app.config.Port)
-	app.loggers.error.Fatalf("server error: %e", server.ListenAndServe())
+	app.loggers.Info().Printf("Started server on port: %v", app.config.Port)
+	app.loggers.Error().Fatalf("server error: %e", server.ListenAndServe())
 }
 
 func NewJwtManager(c *config) *jwt.Manager {
@@ -41,9 +43,15 @@ func NewPostgresConfig(c *config) *postgres.Config {
 	return &postgres.Config{URL: c.DBurl}
 }
 
-func NewLoggers() *loggers {
-	return &loggers{
-		info:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
-		error: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+func NewRedisConfig(c *config) *redis.Config {
+	return &redis.Config{
+		RedisUrl:             c.RedisURL,
+		SessionTTl:           c.SessionTTl,
+		SessionCleanupPeriod: c.SessionCleanupPeriod,
+		SessionWindowPeriod:  c.SessionWindowPeriod,
 	}
+}
+
+func NewRandSource(_ *config) io.Reader {
+	return rand.Reader
 }

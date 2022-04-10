@@ -2,28 +2,31 @@ package main
 
 import (
 	"context"
-	"github.com/reverse-market/backend/pkg/idtoken"
+	"io"
 	"log"
 
 	"github.com/reverse-market/backend/pkg/database/models"
+	"github.com/reverse-market/backend/pkg/idtoken"
 )
 
 type Application struct {
-	config     *config
-	loggers    *loggers
-	parser     tokenParser
-	tokens     tokensManager
-	users      usersRepository
-	addresses  addressesRepository
-	categories categoriesRepository
-	tags       tagsRepository
-	requests   requestsRepository
-	proposals  proposalsRepository
+	config        *config
+	loggers       loggers
+	parser        tokenParser
+	tokens        tokensManager
+	refreshTokens refreshTokensRepository
+	users         usersRepository
+	addresses     addressesRepository
+	categories    categoriesRepository
+	tags          tagsRepository
+	requests      requestsRepository
+	proposals     proposalsRepository
+	randSource    io.Reader
 }
 
-type loggers struct {
-	info  *log.Logger
-	error *log.Logger
+type loggers interface {
+	Info() *log.Logger
+	Error() *log.Logger
 }
 
 type tokenParser interface {
@@ -33,6 +36,15 @@ type tokenParser interface {
 type tokensManager interface {
 	CreateToken(int) (string, error)
 	GetIdFromToken(string) (int, error)
+}
+
+type refreshTokensRepository interface {
+	Add(ctx context.Context, session string, id int) error
+	Get(ctx context.Context, session string) (int, error)
+	Refresh(ctx context.Context, old, new string) error
+	Delete(ctx context.Context, session string) error
+	DeleteExpired(ctx context.Context) error
+	DeleteByUserID(ctx context.Context, id int) error
 }
 
 type usersRepository interface {

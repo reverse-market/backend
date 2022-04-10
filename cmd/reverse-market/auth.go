@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"github.com/reverse-market/backend/pkg/idtoken"
 	"net/http"
+
+	"github.com/reverse-market/backend/pkg/idtoken"
 
 	"github.com/reverse-market/backend/pkg/database/models"
 )
@@ -76,19 +77,95 @@ func (app *Application) signIn(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	token, err := app.tokens.CreateToken(user.ID)
+	tokens, err := app.generateTokens(r.Context(), user.ID)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
+	if err := json.NewEncoder(w).Encode(tokens); err != nil {
+		app.serverError(w, err)
+	}
+}
+
+func (app *Application) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	input := &struct {
+		RefreshToken string `json:"refresh_token"`
+	}{}
+
+	if err := json.NewDecoder(r.Body).Decode(input); err != nil {
+		app.clientError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	id, err := app.refreshTokens.Get(r.Context(), input.RefreshToken)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrNoRecord):
+			app.clientError(w, err, http.StatusUnauthorized)
+		default:
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	accessToken, err := app.tokens.CreateToken(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	newRefreshToken := ""
+	for {
+		newRefreshToken, err = app.generateRandomString(app.config.SessionTokenLength)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+
+		if err := app.refreshTokens.Refresh(r.Context(), input.RefreshToken, newRefreshToken); err != nil {
+			if errors.Is(err, models.ErrAlreadyExists) {
+				continue
+			}
+			app.serverError(w, err)
+			return
+		}
+
+		break
+	}
+
 	response := &struct {
-		JwtToken string `json:"jwt_token"`
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
 	}{
-		JwtToken: token,
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		app.serverError(w, err)
 	}
+}
+
+func (app *Application) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
+	input := &struct {
+		RefreshToken string `json:"refresh_token"`
+	}{}
+
+	if err := json.NewDecoder(r.Body).Decode(input); err != nil {
+		app.clientError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	if err := app.refreshTokens.Delete(r.Context(), input.RefreshToken); err != nil {
+		switch {
+		case errors.Is(err, models.ErrNoRecord):
+			app.clientError(w, err, http.StatusUnauthorized)
+		default:
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

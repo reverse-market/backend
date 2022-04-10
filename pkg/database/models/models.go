@@ -8,6 +8,7 @@ import (
 var (
 	ErrDuplicateEmail = errors.New("duplicate email")
 	ErrNoRecord       = errors.New("no such record")
+	ErrAlreadyExists  = errors.New("entity already exists")
 )
 
 type User struct {

@@ -1,26 +1,31 @@
 package main
 
 import (
+	"context"
+	"crypto/rand"
+	"errors"
 	"fmt"
-	"github.com/reverse-market/backend/pkg/database/models"
 	"io"
 	"io/ioutil"
+	"math/big"
 	"net/http"
 	"runtime/debug"
 	"strconv"
 	"strings"
+
+	"github.com/reverse-market/backend/pkg/database/models"
 )
 
 func (app *Application) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-	app.loggers.error.Output(2, trace)
+	app.loggers.Error().Output(2, trace)
 
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
 func (app *Application) clientError(w http.ResponseWriter, err error, status int) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-	app.loggers.info.Output(2, trace)
+	app.loggers.Info().Output(2, trace)
 
 	http.Error(w, http.StatusText(status), status)
 }
@@ -41,6 +46,58 @@ func savePhoto(source io.Reader) (string, error) {
 	}
 
 	return fmt.Sprintf("/%s", file.Name()), nil
+}
+
+const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+var limit = big.NewInt(int64(len(alphabet)))
+
+func (app *Application) generateRandomString(n int) (string, error) {
+	b := make([]byte, n)
+
+	for i := range b {
+		num, err := rand.Int(app.randSource, limit)
+		if err != nil {
+			return "", err
+		}
+		b[i] = alphabet[num.Int64()]
+	}
+
+	return string(b), nil
+}
+
+type tokens struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+func (app *Application) generateTokens(ctx context.Context, id int) (*tokens, error) {
+	accessToken, err := app.tokens.CreateToken(id)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken := ""
+	for {
+		refreshToken, err = app.generateRandomString(app.config.SessionTokenLength)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := app.refreshTokens.Add(ctx, refreshToken, id); err != nil {
+			if errors.Is(err, models.ErrAlreadyExists) {
+				continue
+			}
+			return nil, err
+		}
+
+		break
+	}
+
+	return &tokens{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
 
 func getTagFilters(r *http.Request) *models.TagFilters {

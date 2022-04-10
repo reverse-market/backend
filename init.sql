@@ -54,7 +54,7 @@ create table if not exists requests_tags
 create or replace view requests_view as
 SELECT r.id,
        r.user_id,
-       u.name as username,
+       u.name                                                          as username,
        r.category_id,
        r.name,
        r.item_name,
@@ -64,14 +64,16 @@ SELECT r.id,
        r.quantity,
        r.date,
        r.finished,
-       jsonb_agg(jsonb_build_object(
-               'id', t.id,
-               'name', t.name
-           )) as tags
+       coalesce(
+                       jsonb_agg(
+                       jsonb_build_object(
+                               'id', t.id,
+                               'name', t.name
+                           )) filter ( where t.id is not null ), '[]') as tags
 FROM requests r
          LEFT JOIN users u on r.user_id = u.id
          LEFT JOIN requests_tags rt on r.id = rt.request_id
-         JOIN tags t on rt.tag_id = t.id
+         LEFT JOIN tags t on rt.tag_id = t.id
 GROUP BY r.id, u.id;
 
 create or replace function search_requests(page int, size int, category int, required_tags int[], price_from int,
@@ -92,14 +94,16 @@ begin
                r.quantity,
                r.date,
                r.finished,
-               jsonb_agg(jsonb_build_object(
-                       ''id'', t.id,
-                       ''name'', t.name
-                   )) as tags
+               coalesce(
+                       jsonb_agg(
+                       jsonb_build_object(
+                               ''id'', t.id,
+                               ''name'', t.name
+                           )) filter ( where t.id is not null ), ''[]'') as tags
         FROM requests r
-                 LEFT JOIN users u on r.user_id = u.id
-                 LEFT JOIN requests_tags rt on r.id = rt.request_id
-                 JOIN tags t on rt.tag_id = t.id
+         LEFT JOIN users u on r.user_id = u.id
+         LEFT JOIN requests_tags rt on r.id = rt.request_id
+         LEFT JOIN tags t on rt.tag_id = t.id
         WHERE r.finished = false
           AND ($1 IS NULL OR r.category_id = $1)
           AND ($3 IS NULL OR r.price >= $3)
